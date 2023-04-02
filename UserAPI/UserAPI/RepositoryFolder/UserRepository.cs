@@ -6,6 +6,7 @@ using UserAPI.DTO;
 using UserAPI.Interfaces;
 using Dapper;
 using System.Data.SqlClient;
+using Newtonsoft.Json;
 
 namespace UserAPI.RepositoryFolder
 {
@@ -17,13 +18,26 @@ namespace UserAPI.RepositoryFolder
             Config = config;
         }
 
-        public async Task<List<User>> CreateUser(UserRegisterDTO user)
+        public async Task<int> CreateUser(UserRegisterDTO user)
         {
+            var a = new
+            {
+                FirstName = user.FirstName,
+                UserName = user.UserName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Password = "Hello"
+            };
+            var serialized = JsonConvert.SerializeObject(a);
+
+            
+
             using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "INSERT INTO Users (Name, Email, Password) VALUES (@FirstName, @Email, @Password)";
-            string hashedPassword = HashPassword(user.Password);
-            var create=await connection.ExecuteAsync(sql, new { FirstName = user.FirstName,LastName=user.LastName, Email = user.Email, Password = hashedPassword });
-            return  
+            string sql = "INSERT INTO Users (UserName,FirstName,LastName, Email, Password) VALUES (@UserName,@FirstName,@LastName, @Email, @Password)";
+            //string hashedPassword = HashPassword(user.Password);
+            var create=await connection.ExecuteAsync(sql, new { FirstName = user.FirstName, UserName=user.UserName,
+                LastName=user.LastName, Email = user.Email, Password = "Hello" });
+            return create;
 
         }
         public async Task<IEnumerable<User>> SelectAllUsers(SqlConnection connection)
@@ -52,7 +66,7 @@ namespace UserAPI.RepositoryFolder
         private JwtSecurityToken GenerateJwtToken(User user)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            byte[] key = Encoding.ASCII.GetBytes("mysecretkey");
+            byte[] key = Encoding.ASCII.GetBytes("ABCD");
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
