@@ -34,9 +34,9 @@ namespace UserAPI.RepositoryFolder
 
             using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
             string sql = "INSERT INTO Users (UserName,FirstName,LastName, Email, Password) VALUES (@UserName,@FirstName,@LastName, @Email, @Password)";
-            //string hashedPassword = HashPassword(user.Password);
+            string hashedPassword = HashPassword(user.Password);
             var create=await connection.ExecuteAsync(sql, new { FirstName = user.FirstName, UserName=user.UserName,
-                LastName=user.LastName, Email = user.Email, Password = "Hello" });
+                LastName=user.LastName, Email = user.Email, Password = user.Password });
             return create;
 
         }
@@ -51,8 +51,8 @@ namespace UserAPI.RepositoryFolder
         {
 
              using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "SELECT * FROM Users WHERE UserName = @UserName";
-                var users = await connection.QuerySingleOrDefaultAsync<User>(sql, new { UserName = user.UserName });
+            string sql = "SELECT * FROM Users WHERE UserName = @UserName, Password=@Password";
+                var users = await connection.QuerySingleOrDefaultAsync<User>(sql, new { UserName = user.UserName,Password=user.Password });
                 if (user != null && VerifyPassword(user.UserName, user.Password))
                 {
                     JwtSecurityToken token = GenerateJwtToken(users);

@@ -17,13 +17,13 @@ namespace UserAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(UserRegisterDTO user)
         {
-            var create=UserRepository.CreateUser(user);
+            var create=await UserRepository.CreateUser(user);
             return Ok(create);
         }
         [HttpGet]
         public async Task<IActionResult> GetUser(AuthorizeUserDTO user)
         {
-            var get=UserRepository.GetUser(user);
+            var get=await UserRepository.GetUser(user);
             return Ok(get);
         }
         //[HttpGet("myendpoint")]
