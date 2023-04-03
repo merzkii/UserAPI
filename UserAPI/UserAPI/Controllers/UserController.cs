@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using UserAPI.DTO;
 using UserAPI.Interfaces;
 
@@ -21,20 +25,55 @@ namespace UserAPI.Controllers
             return Ok(create);
         }
         [HttpGet]
-        public async Task<IActionResult> GetUser(AuthorizeUserDTO user)
+        public async Task<IActionResult> GetUser([FromQuery]AuthorizeUserDTO user)
         {
             var get=await UserRepository.GetUser(user);
+            if (user != null && VerifyPassword(user.UserName, user.Password))
+            {
+                JwtSecurityToken token = GenerateJwtToken(get);
+                return (IActionResult)token;
+            }
             return Ok(get);
         }
-        //[HttpGet("myendpoint")]
-        //public async Task<IActionResult> MyEndpoint()
-        //{
-        //    int userId = int.Parse(User.Claims.First(c => c.Type == "Id").Value);
-        //    string name = User.Claims.First(c => c.Type == "UserName").Value;
-        //    string email = User.Claims.First(c => c.Type == "email").Value;
 
 
-        //    return 
-        //}
-    }
+        private JwtSecurityToken GenerateJwtToken(User user)
+        {
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            byte[] key = Encoding.ASCII.GetBytes("ABCD");
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+            new Claim("Id", user.Id.ToString()),
+            new Claim("FirstName", user.FirstName),
+            new Claim("LastName",user.LastName),
+            new Claim("UserName", user.UserName),
+            new Claim("email", user.Email)
+            }),
+                Expires = DateTime.UtcNow.AddMinutes(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+            return (JwtSecurityToken)token;
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+
+
+        }
+
+            //[HttpGet("myendpoint")]
+            //public async Task<IActionResult> MyEndpoint()
+            //{
+            //    int userId = int.Parse(User.Claims.First(c => c.Type == "Id").Value);
+            //    string name = User.Claims.First(c => c.Type == "UserName").Value;
+            //    string email = User.Claims.First(c => c.Type == "email").Value;
+
+
+            //    return 
+            //}
+        }
 }

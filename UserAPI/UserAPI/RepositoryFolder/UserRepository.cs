@@ -20,15 +20,15 @@ namespace UserAPI.RepositoryFolder
 
         public async Task<int> CreateUser(UserRegisterDTO user)
         {
-            var a = new
-            {
-                FirstName = user.FirstName,
-                UserName = user.UserName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Password = "Hello"
-            };
-            var serialized = JsonConvert.SerializeObject(a);
+            //var a = new
+            //{
+            //    FirstName = user.FirstName,
+            //    UserName = user.UserName,
+            //    LastName = user.LastName,
+            //    Email = user.Email,
+            //    Password = "Hello"
+            //};
+            //var serialized = JsonConvert.SerializeObject(a);
 
             
 
@@ -47,18 +47,18 @@ namespace UserAPI.RepositoryFolder
             return all.ToList();
         }
 
-        public async Task<JwtSecurityToken> GetUser(AuthorizeUserDTO user)
+        public async Task<User> GetUser(AuthorizeUserDTO user)
         {
 
              using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "SELECT * FROM Users WHERE UserName = @UserName, Password=@Password";
-                var users = await connection.QuerySingleOrDefaultAsync<User>(sql, new { UserName = user.UserName,Password=user.Password });
-                if (user != null && VerifyPassword(user.UserName, user.Password))
-                {
-                    JwtSecurityToken token = GenerateJwtToken(users);
-                    return token;
-                }
-                return null;
+            string sql = "SELECT * FROM users WHERE UserName = @UserName, Password=@Password";
+            var getUser = await connection.QueryAsync<User>(sql, new { UserName = user.UserName, Password = user.Password });
+            //if (user != null && VerifyPassword(user.UserName, user.Password))
+            //{
+            //    JwtSecurityToken token = GenerateJwtToken(users);
+            //    return token;
+            //}
+            return getUser.FirstOrDefault();
             
 
 
