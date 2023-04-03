@@ -51,14 +51,14 @@ namespace UserAPI.RepositoryFolder
         {
 
              using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "SELECT * FROM users WHERE UserName = @UserName, Password=@Password";
+            string sql = "SELECT * FROM users WHERE UserName = @UserName AND Password = @Password";
             var getUser = await connection.QueryAsync<User>(sql, new { UserName = user.UserName, Password = user.Password });
             //if (user != null && VerifyPassword(user.UserName, user.Password))
             //{
             //    JwtSecurityToken token = GenerateJwtToken(users);
             //    return token;
             //}
-            return getUser.FirstOrDefault();
+            return getUser.SingleOrDefault();
             
 
 
