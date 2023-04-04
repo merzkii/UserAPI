@@ -51,31 +51,35 @@ namespace UserAPI.RepositoryFolder
         {
 
              using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "SELECT * FROM users WHERE UserName = @UserName AND Password = @Password";
-            var getUser = await connection.QueryAsync<User>(sql, new { UserName = user.UserName, Password = user.Password });
-            //if (user != null && VerifyPassword(user.UserName, user.Password))
-            //{
-            //    JwtSecurityToken token = GenerateJwtToken(users);
-            //    return token;
-            //}
-            return getUser.SingleOrDefault();
+            string sql = "SELECT Id,UserName,FirstName,LastName,Email,Password FROM users WHERE UserName = @UserName AND Password = @Password";
+           var getUser = await connection.QuerySingleOrDefaultAsync<User>(sql, new { UserName = user.UserName, Password = user.Password });
+            if (user != null )
+            {
+               var token = GenerateJwtToken(getUser.UserName,getUser.Id);
+                return new User { Token = token.ToString() };
+                
+            }
+
+            return getUser;
             
 
 
         }
-        private JwtSecurityToken GenerateJwtToken(User user)
+        private JwtSecurityToken GenerateJwtToken(string username,int userId)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            byte[] key = Encoding.ASCII.GetBytes("ABCD");
+            byte[] key = Encoding.ASCII.GetBytes("this is my custom Secret key for authentication");
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-            new Claim("Id", user.Id.ToString()),
-            new Claim("FirstName", user.FirstName),
-            new Claim("LastName",user.LastName),
-            new Claim("UserName", user.UserName),
-            new Claim("email", user.Email)
+                    new Claim(ClaimTypes.Name, username),
+                    new Claim(ClaimTypes.NameIdentifier,userId.ToString())
+            //new Claim("Id", user.Id.ToString()),
+            //new Claim("FirstName", user.FirstName),
+            //new Claim("LastName",user.LastName),
+            //new Claim("UserName", user.UserName),
+            //new Claim("email", user.Email)
             }),
                 Expires = DateTime.UtcNow.AddMinutes(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

@@ -28,11 +28,7 @@ namespace UserAPI.Controllers
         public async Task<IActionResult> GetUser([FromQuery]AuthorizeUserDTO user)
         {
             var get=await UserRepository.GetUser(user);
-            if (user != null && VerifyPassword(user.UserName, user.Password))
-            {
-                JwtSecurityToken token = GenerateJwtToken(get);
-                return (IActionResult)token;
-            }
+           
             return Ok(get);
         }
 
