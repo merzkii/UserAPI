@@ -14,9 +14,11 @@ namespace UserAPI.Controllers
     public class UserController : ControllerBase
     {
         public IUserRepository UserRepository { get; set; }
-        public UserController(IUserRepository userRepository)
+        public IWalletRepository WalletRepository { get; set; }
+        public UserController(IUserRepository userRepository,IWalletRepository walletRepository)
         {
             UserRepository = userRepository;
+            WalletRepository = walletRepository;
         }
         [HttpPost]
         public async Task<IActionResult> CreateUser(UserRegisterDTO user)
@@ -31,35 +33,10 @@ namespace UserAPI.Controllers
            
             return Ok(get);
         }
+      
 
 
-        private JwtSecurityToken GenerateJwtToken(User user)
-        {
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            byte[] key = Encoding.ASCII.GetBytes("ABCD");
-            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-            new Claim("Id", user.Id.ToString()),
-            new Claim("FirstName", user.FirstName),
-            new Claim("LastName",user.LastName),
-            new Claim("UserName", user.UserName),
-            new Claim("email", user.Email)
-            }),
-                Expires = DateTime.UtcNow.AddMinutes(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-            return (JwtSecurityToken)token;
-        }
-
-        private bool VerifyPassword(string password, string hashedPassword)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
-
-
-        }
+       
 
             //[HttpGet("myendpoint")]
             //public async Task<IActionResult> MyEndpoint()

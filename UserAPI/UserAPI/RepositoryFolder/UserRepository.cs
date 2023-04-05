@@ -7,6 +7,7 @@ using UserAPI.Interfaces;
 using Dapper;
 using System.Data.SqlClient;
 using Newtonsoft.Json;
+using UserAPI.Models;
 
 namespace UserAPI.RepositoryFolder
 {
@@ -47,24 +48,64 @@ namespace UserAPI.RepositoryFolder
             return all.ToList();
         }
 
-        public async Task<User> GetUser(AuthorizeUserDTO user)
-        {
+        //public async Task<User> GetUser(AuthorizeUserDTO user)
+        //{
 
-             using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "SELECT Id,UserName,FirstName,LastName,Email,Password FROM users WHERE UserName = @UserName AND Password = @Password";
-           var getUser = await connection.QuerySingleOrDefaultAsync<User>(sql, new { UserName = user.UserName, Password = user.Password });
-            if (user != null )
-            {
-               var token = GenerateJwtToken(getUser.UserName,getUser.Id);
-                return new User { Token = token.ToString() };
+        //     using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
+        //    string sql =  @"
+        //        SELECT u.*, W.* 
+        //         FROM users u
+        //        JOIN Wallet w ON u.WalletId = w.Id 
+        //       where u.UserName=@UserName and u.Password=@Password"; 
+        //   var getUser = await connection.QueryAsync<User,Wallet,User>(sql,(person,wallet)=> { person.Wallet = wallet;return person; }, new { UserName = user.UserName, Password = user.Password});
+        //    //if (user != null )
+        //    //{
+        //    //   var token = GenerateJwtToken(getUser.UserName,getUser.Id);
+        //    //    return new User { Token = token.ToString() };
                 
-            }
+        //    //}
 
-            return getUser;
+        //    return getUser.SingleOrDefault();
             
 
 
+        //}
+        public async Task< User> GetUser(AuthorizeUserDTO userDto)
+        {
+            using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
+            {
+                connection.Open(); 
+
+                var sql = @"
+                 SELECT
+                    u.Id,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    w.Balance
+                 FROM
+                    users u
+                    INNER JOIN Wallet w ON u.WalletId = w.Id
+                 WHERE
+                    u.UserName = @UserName
+                    AND u.Password = @Password";
+
+                var result =await  connection.QueryAsync<User, Wallet, User>(sql, (user, wallet) =>
+                {
+                    user.Wallet = wallet;
+                    return user;
+                }, new { UserName = userDto.UserName, Password = userDto.Password }, splitOn: "Balance");
+
+                return result.SingleOrDefault();
+            }
+
+
+
         }
+        
+
+        // Other methods...
+    
         private JwtSecurityToken GenerateJwtToken(string username,int userId)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using UserAPI.Models;
 
 namespace UserAPI
 {
@@ -11,6 +12,7 @@ namespace UserAPI
         public string Email { get; set; }
         public string Password { get; set; }
         public string Token { get; set; }
+        public Wallet Wallet { get; set; }
        
     }
 }
