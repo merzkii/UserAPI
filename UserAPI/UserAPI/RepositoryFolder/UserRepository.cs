@@ -34,10 +34,10 @@ namespace UserAPI.RepositoryFolder
             
 
             using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            string sql = "INSERT INTO Users (UserName,FirstName,LastName, Email, Password) VALUES (@UserName,@FirstName,@LastName, @Email, @Password)";
+            string sql = "INSERT INTO Users (UserName,FirstName,LastName, Email, Password,WalletId) VALUES (@UserName,@FirstName,@LastName, @Email, @Password,@WalletId)";
             string hashedPassword = HashPassword(user.Password);
             var create=await connection.ExecuteAsync(sql, new { FirstName = user.FirstName, UserName=user.UserName,
-                LastName=user.LastName, Email = user.Email, Password = user.Password });
+                LastName=user.LastName, Email = user.Email, Password = user.Password, WalletId=user.walletId });
             return create;
 
         }
@@ -102,10 +102,73 @@ namespace UserAPI.RepositoryFolder
 
 
         }
-        
+        public async Task Deposit(string userName,decimal amount)
+        {
+            using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
+            {
+                var currentBalance = GetBalance(userName);
+                var newBalance =  currentBalance + amount;
+                UpdateWallet(userName, newBalance);
+                
+            }
+        }
+        public async Task Withdraw(int walletId,decimal amount)
+        {
+            using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
+            var balance = new Wallet().Balance;
+
+            if (balance < amount)
+            {
+                throw new Exception("Insufficient funds");
+            }
+             
+            var sql = "UPDATE Wallets SET Balance = Balance - @Amount WHERE iD = @walletId";
+            var withdraw = await connection.ExecuteAsync(sql, new { WalletId = walletId, Amount = amount });
+            
+        }
+
+
+        private decimal GetBalance(string userName)
+        {
+            using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
+            
+                connection.Open();
+
+            var sql = @"
+                SELECT w.Balance
+                FROM users u
+                INNER JOIN Wallet w ON u.WalletId = w.iD
+                WHERE u.UserName = @userName";
+
+            return connection.ExecuteScalar<decimal>(sql, new { Username = userName });
+
+
+            
+            
+        }
+
+        private void UpdateWallet(string userName, decimal newBalance)
+        {
+            using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
+            {
+                connection.Open();
+
+                var sql = @"
+                UPDATE Wallet
+                SET Balance = @Balance
+                WHERE Id in (
+                    SELECT w.iD
+                    FROM users u
+                    INNER JOIN Wallet w ON u.WalletId = w.iD
+                    WHERE u.UserName = @userName
+                )";
+
+                var rowsAffected = connection.Execute(sql, new { Username = userName, Balance = newBalance });
+            }
+        }
 
         // Other methods...
-    
+
         private JwtSecurityToken GenerateJwtToken(string username,int userId)
         {
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();

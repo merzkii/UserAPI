@@ -13,6 +13,7 @@ namespace UserAPI
         public string Password { get; set; }
         public string Token { get; set; }
         public Wallet Wallet { get; set; }
+        public int WalletId { get; set; }
        
     }
 }
