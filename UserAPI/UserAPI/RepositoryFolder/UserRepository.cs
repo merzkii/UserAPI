@@ -83,6 +83,7 @@ namespace UserAPI.RepositoryFolder
                     u.LastName,
                     u.Email,
                     w.Balance
+                    w.WalletId
                  FROM
                     users u
                     INNER JOIN Wallet w ON u.WalletId = w.Id
@@ -112,22 +113,14 @@ namespace UserAPI.RepositoryFolder
                 
             }
         }
-        public async Task Withdraw(int walletId,decimal amount)
+        public async Task Withdraw(string userName, decimal amount)
         {
             using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));
-            var balance = new Wallet().Balance;
+            var currentBalance = GetBalance(userName);
+            var newBalance = currentBalance - amount;
+            UpdateWallet(userName, newBalance);
 
-            if (balance < amount)
-            {
-                throw new Exception("Insufficient funds");
-            }
-             
-            var sql = "UPDATE Wallets SET Balance = Balance - @Amount WHERE iD = @walletId";
-            var withdraw = await connection.ExecuteAsync(sql, new { WalletId = walletId, Amount = amount });
-            
         }
-
-
         private decimal GetBalance(string userName)
         {
             using var connection = new SqlConnection(Config.GetConnectionString("DefaultConnection"));

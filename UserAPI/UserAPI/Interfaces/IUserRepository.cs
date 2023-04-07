@@ -8,7 +8,7 @@ namespace UserAPI.Interfaces
         Task<int> CreateUser(UserRegisterDTO user);
         Task<User> GetUser(AuthorizeUserDTO user);
         Task Deposit(string userName, decimal amount);
-        Task Withdraw(int walletId,decimal amount);
+        Task Withdraw(string userName,decimal amount);
         
     }
 }

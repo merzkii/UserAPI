@@ -14,32 +14,36 @@ namespace UserAPI.Controllers
     public class UserController : ControllerBase
     {
         public IUserRepository UserRepository { get; set; }
-        
+
         public UserController(IUserRepository userRepository)
         {
             UserRepository = userRepository;
-           
+
         }
         [HttpPost]
         public async Task<IActionResult> CreateUser(UserRegisterDTO user)
         {
-            var create=await UserRepository.CreateUser(user);
+            var create = await UserRepository.CreateUser(user);
             return Ok(create);
         }
         [HttpGet]
-        public async Task<IActionResult> GetUser([FromQuery]AuthorizeUserDTO user)
+        public async Task<IActionResult> GetUser([FromQuery] AuthorizeUserDTO user)
         {
-            var get=await UserRepository.GetUser(user);
-           
+            var get = await UserRepository.GetUser(user);
+
             return Ok(get);
         }
         [HttpPut]
-        public async Task Deposit(string userName,decimal amount)
+        public async Task Deposit(string userName, decimal amount)
         {
-            await UserRepository.Deposit(userName,amount);
-            
+            await UserRepository.Deposit(userName, amount);
+
         }
-      
+        [HttpPut("accept /{userName}")] 
+         public async Task Withdraw(string userName,decimal amount)
+        {
+            await UserRepository.Withdraw(userName,amount);
+        }      
 
 
        
